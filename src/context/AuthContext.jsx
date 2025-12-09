@@ -1,4 +1,4 @@
-import { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import { createContext, useState, useContext, useEffect, useCallback, useRef } from 'react';
 import keycloak from '../keycloak';
 
 const AuthContext = createContext(null);
@@ -8,6 +8,7 @@ export const AuthProvider = ({ children }) => {
   const [authenticated, setAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
+  const initCalled = useRef(false);
 
   const extractRole = (tokenParsed) => {
     const roles = tokenParsed.realm_access?.roles || [];
@@ -22,17 +23,18 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
+    if (initCalled.current) return;
+    initCalled.current = true;
+
     keycloak
         .init({
           onLoad: 'login-required',
           checkLoginIframe: false,
           pkceMethod: 'S256',
-          responseMode: 'query',
         })
         .then((auth) => {
           setAuthenticated(auth);
           if (auth) {
-            // Rensa URL från Keycloak-parametrar
             if (window.location.search.includes('code=') || window.location.search.includes('state=')) {
               window.history.replaceState({}, document.title, window.location.pathname);
             }
