@@ -6,15 +6,22 @@ const keycloakConfig = {
   clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID || 'frontend-client',
 };
 
+console.log('Keycloak config:', keycloakConfig);
+
 const keycloak = new Keycloak(keycloakConfig);
 
 let initPromise = null;
 
 export const initKeycloak = () => {
+  console.log('initKeycloak called, initPromise exists:', !!initPromise);
+  console.log('keycloak.authenticated:', keycloak.authenticated);
+
   if (initPromise) {
+    console.log('Returning existing promise');
     return initPromise;
   }
 
+  console.log('Starting new init');
   initPromise = keycloak
       .init({
         onLoad: 'login-required',
@@ -22,8 +29,9 @@ export const initKeycloak = () => {
         pkceMethod: 'S256',
       })
       .then((authenticated) => {
-        // Rensa URL från auth-parametrar
+        console.log('Init completed, authenticated:', authenticated);
         if (window.location.search.includes('code=') || window.location.search.includes('state=')) {
+          console.log('Clearing URL params');
           window.history.replaceState({}, document.title, window.location.pathname);
         }
         return authenticated;
