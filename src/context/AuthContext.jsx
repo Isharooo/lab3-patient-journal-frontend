@@ -12,9 +12,8 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     keycloak
       .init({
-        onLoad: 'login-required',
-        checkLoginIframe: false,
-        pkceMethod: 'S256',
+          onLoad: 'login-required',
+          checkLoginIframe: false,
       })
       .then((auth) => {
         setAuthenticated(auth);
