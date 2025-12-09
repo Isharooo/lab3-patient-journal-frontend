@@ -1,5 +1,5 @@
-import { createContext, useState, useContext, useEffect, useCallback, useRef } from 'react';
-import keycloak from '../keycloak';
+import { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import keycloak, { initKeycloak } from '../keycloak';
 
 const AuthContext = createContext(null);
 
@@ -8,7 +8,6 @@ export const AuthProvider = ({ children }) => {
   const [authenticated, setAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  const initCalled = useRef(false);
 
   const extractRole = (tokenParsed) => {
     const roles = tokenParsed.realm_access?.roles || [];
@@ -23,22 +22,10 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    if (initCalled.current) return;
-    initCalled.current = true;
-
-    keycloak
-        .init({
-          onLoad: 'login-required',
-          checkLoginIframe: false,
-          pkceMethod: 'S256',
-        })
+    initKeycloak()
         .then((auth) => {
           setAuthenticated(auth);
           if (auth) {
-            if (window.location.search.includes('code=') || window.location.search.includes('state=')) {
-              window.history.replaceState({}, document.title, window.location.pathname);
-            }
-
             setToken(keycloak.token);
             const tokenParsed = keycloak.tokenParsed;
             setUser({
@@ -70,7 +57,7 @@ export const AuthProvider = ({ children }) => {
             logout();
           });
     };
-  }, [logout]);
+  }, []);
 
   const getToken = useCallback(async () => {
     if (keycloak.isTokenExpired(5)) {
