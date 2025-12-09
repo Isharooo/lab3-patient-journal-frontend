@@ -15,6 +15,7 @@ export const AuthProvider = ({ children }) => {
           onLoad: 'login-required',
           checkLoginIframe: false,
           pkceMethod: 'S256',
+          responseMode: 'query',
         })
       .then((auth) => {
         setAuthenticated(auth);
