@@ -1,7 +1,6 @@
 import axios from 'axios';
 import keycloak from '../keycloak';
 
-// Backend URLs from environment variables
 const PATIENT_API_URL = import.meta.env.VITE_PATIENT_API_URL || 'http://localhost:8080/api';
 const MESSAGE_API_URL = import.meta.env.VITE_MESSAGE_API_URL || 'http://localhost:8081/api';
 
