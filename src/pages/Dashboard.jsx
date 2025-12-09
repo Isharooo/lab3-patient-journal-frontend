@@ -16,11 +16,9 @@ function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch unread message count
         const count = await messageService.getUnreadCount(user.id);
         setUnreadCount(count);
 
-        // If patient, fetch their own data
         if (isPatient) {
           const patient = await patientService.getPatientByUserId(user.id);
           setPatientData(patient);
