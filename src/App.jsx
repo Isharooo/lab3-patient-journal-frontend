@@ -12,79 +12,79 @@ import MessageDetails from './pages/MessageDetails';
 import './App.css';
 
 function App() {
-  return (
-    <AuthProvider>
-      <Router>
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+    return (
+        <Router>
+            <AuthProvider>
+                <Navbar />
+                <Routes>
+                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
+                    <Route
+                        path="/dashboard"
+                        element={
+                            <ProtectedRoute>
+                                <Dashboard />
+                            </ProtectedRoute>
+                        }
+                    />
 
-          <Route
-            path="/patients"
-            element={
-              <ProtectedRoute allowedRoles={['DOCTOR', 'STAFF']}>
-                <PatientList />
-              </ProtectedRoute>
-            }
-          />
+                    <Route
+                        path="/patients"
+                        element={
+                            <ProtectedRoute allowedRoles={['DOCTOR', 'STAFF']}>
+                                <PatientList />
+                            </ProtectedRoute>
+                        }
+                    />
 
-          <Route
-            path="/patients/:id"
-            element={
-              <ProtectedRoute allowedRoles={['DOCTOR', 'STAFF']}>
-                <PatientDetails />
-              </ProtectedRoute>
-            }
-          />
+                    <Route
+                        path="/patients/:id"
+                        element={
+                            <ProtectedRoute allowedRoles={['DOCTOR', 'STAFF']}>
+                                <PatientDetails />
+                            </ProtectedRoute>
+                        }
+                    />
 
-          <Route
-            path="/patients/:patientId/journal/create"
-            element={
-              <ProtectedRoute allowedRoles={['DOCTOR', 'STAFF']}>
-                <CreateJournalEntry />
-              </ProtectedRoute>
-            }
-          />
+                    <Route
+                        path="/patients/:patientId/journal/create"
+                        element={
+                            <ProtectedRoute allowedRoles={['DOCTOR', 'STAFF']}>
+                                <CreateJournalEntry />
+                            </ProtectedRoute>
+                        }
+                    />
 
-          <Route
-            path="/messages"
-            element={
-              <ProtectedRoute>
-                <Messages />
-              </ProtectedRoute>
-            }
-          />
+                    <Route
+                        path="/messages"
+                        element={
+                            <ProtectedRoute>
+                                <Messages />
+                            </ProtectedRoute>
+                        }
+                    />
 
-          <Route
-            path="/messages/compose"
-            element={
-              <ProtectedRoute>
-                <ComposeMessage />
-              </ProtectedRoute>
-            }
-          />
+                    <Route
+                        path="/messages/compose"
+                        element={
+                            <ProtectedRoute>
+                                <ComposeMessage />
+                            </ProtectedRoute>
+                        }
+                    />
 
-          <Route
-            path="/messages/:id"
-            element={
-              <ProtectedRoute>
-                <MessageDetails />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </Router>
-    </AuthProvider>
-  );
+                    <Route
+                        path="/messages/:id"
+                        element={
+                            <ProtectedRoute>
+                                <MessageDetails />
+                            </ProtectedRoute>
+                        }
+                    />
+                </Routes>
+            </AuthProvider>
+        </Router>
+    );
 }
 
 export default App;
