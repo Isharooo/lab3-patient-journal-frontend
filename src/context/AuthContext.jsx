@@ -11,10 +11,11 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     keycloak
-      .init({
+        .init({
           onLoad: 'login-required',
           checkLoginIframe: false,
-      })
+          pkceMethod: 'S256',
+        })
       .then((auth) => {
         setAuthenticated(auth);
         if (auth) {
