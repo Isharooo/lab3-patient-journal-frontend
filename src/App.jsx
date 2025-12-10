@@ -9,7 +9,7 @@ import CreateJournalEntry from './pages/CreateJournalEntry';
 import Messages from './pages/Messages';
 import ComposeMessage from './pages/ComposeMessage';
 import MessageDetails from './pages/MessageDetails';
-import SearchPatients from './pages/SearchPatients';
+import SearchPatients from './components/SearchPatients.jsx';
 import CreatePatient from './pages/CreatePatient';
 import './App.css';
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { searchService } from '../services/searchService';
+import { searchService } from '../services/searchService.js';
 
 function SearchPatients() {
     const [searchQuery, setSearchQuery] = useState('');

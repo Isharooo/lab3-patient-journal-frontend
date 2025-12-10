@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { imageService } from '../services/imageService';
+import { imageService } from '../services/imageService.js';
 
 function ImageUpload({ patientId, onImageUploaded }) {
     const [selectedFile, setSelectedFile] = useState(null);
