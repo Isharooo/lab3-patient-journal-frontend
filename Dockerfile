@@ -26,6 +26,8 @@ RUN npm run build
 # Production stage
 FROM nginx:alpine
 
+RUN echo "Build timestamp: $(date)" > /usr/share/nginx/html/build-info.txt
+
 # Copy custom nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
