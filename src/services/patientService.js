@@ -1,7 +1,7 @@
 import { patientApi } from './api';
 
 export const patientService = {
-  // Läsning sker fortfarande via vanligt REST (snabbast för användaren)
+  // === LÄSNING: Via vanligt REST (snabbast för användaren) ===
   getAllPatients: async () => {
     const response = await patientApi.get('/patients');
     return response.data;
@@ -17,23 +17,41 @@ export const patientService = {
     return response.data;
   },
 
-  // === HÖGRE BETYG: Skrivning sker via Kafka (Asynkront) ===
+  // === HÖGRE BETYG: Skrivning via Kafka (Asynkront) ===
+  // Dessa anrop skickar kommandon till Kafka topic 'patient.commands'
+  // som sedan processas asynkront av PatientCommandConsumer
 
   createPatient: async (patientData) => {
-    // Anropar PatientKafkaController
+    // Anropar PatientKafkaController -> Skickar CREATE-kommando till Kafka
     const response = await patientApi.post('/kafka/patients', patientData);
     return response.data;
   },
 
   updatePatient: async (id, patientData) => {
-    // Anropar PatientKafkaController
+    // Anropar PatientKafkaController -> Skickar UPDATE-kommando till Kafka
     const response = await patientApi.put(`/kafka/patients/${id}`, patientData);
     return response.data;
   },
 
   deletePatient: async (id) => {
-    // Anropar PatientKafkaController
+    // Anropar PatientKafkaController -> Skickar DELETE-kommando till Kafka
     const response = await patientApi.delete(`/kafka/patients/${id}`);
     return response.data;
-  }
+  },
+
+  // === Alternativ: Direkt REST utan Kafka (för snabbare respons) ===
+  createPatientDirect: async (patientData) => {
+    const response = await patientApi.post('/patients', patientData);
+    return response.data;
+  },
+
+  updatePatientDirect: async (id, patientData) => {
+    const response = await patientApi.put(`/patients/${id}`, patientData);
+    return response.data;
+  },
+
+  deletePatientDirect: async (id) => {
+    const response = await patientApi.delete(`/patients/${id}`);
+    return response.data;
+  },
 };

@@ -9,6 +9,8 @@ import CreateJournalEntry from './pages/CreateJournalEntry';
 import Messages from './pages/Messages';
 import ComposeMessage from './pages/ComposeMessage';
 import MessageDetails from './pages/MessageDetails';
+import SearchPatients from './pages/SearchPatients';
+import CreatePatient from './pages/CreatePatient';
 import './App.css';
 
 function App() {
@@ -28,11 +30,30 @@ function App() {
                         }
                     />
 
+                    {/* Patient routes - endast för DOCTOR och STAFF */}
                     <Route
                         path="/patients"
                         element={
                             <ProtectedRoute allowedRoles={['DOCTOR', 'STAFF']}>
                                 <PatientList />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/patients/search"
+                        element={
+                            <ProtectedRoute allowedRoles={['DOCTOR', 'STAFF']}>
+                                <SearchPatients />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/patients/create"
+                        element={
+                            <ProtectedRoute allowedRoles={['DOCTOR', 'STAFF']}>
+                                <CreatePatient />
                             </ProtectedRoute>
                         }
                     />
@@ -55,6 +76,7 @@ function App() {
                         }
                     />
 
+                    {/* Message routes - alla inloggade användare */}
                     <Route
                         path="/messages"
                         element={

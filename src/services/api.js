@@ -4,6 +4,8 @@ import keycloak from '../keycloak';
 // Backend URLs from environment variables
 const PATIENT_API_URL = import.meta.env.VITE_PATIENT_API_URL || 'http://localhost:8080/api';
 const MESSAGE_API_URL = import.meta.env.VITE_MESSAGE_API_URL || 'http://localhost:8081/api';
+const SEARCH_API_URL = import.meta.env.VITE_SEARCH_API_URL || 'http://localhost:8083/api';
+const IMAGE_API_URL = import.meta.env.VITE_IMAGE_API_URL || 'http://localhost:3000';
 
 // Create axios instance for patient-journal-backend
 export const patientApi = axios.create({
@@ -21,41 +23,59 @@ export const messageApi = axios.create({
   },
 });
 
-// Add token interceptor to both instances
+// Create axios instance for search-service (Quarkus)
+export const searchApi = axios.create({
+  baseURL: SEARCH_API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Create axios instance for image-service (Node.js)
+export const imageApi = axios.create({
+  baseURL: IMAGE_API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Add token interceptor to all instances
 const addAuthInterceptor = (axiosInstance) => {
   axiosInstance.interceptors.request.use(
-    async (config) => {
-      if (keycloak.authenticated) {
-        if (keycloak.isTokenExpired(5)) {
-          try {
-            await keycloak.updateToken(30);
-          } catch (error) {
-            console.error('Failed to refresh token:', error);
-            keycloak.logout();
-            return Promise.reject(error);
+      async (config) => {
+        if (keycloak.authenticated) {
+          if (keycloak.isTokenExpired(5)) {
+            try {
+              await keycloak.updateToken(30);
+            } catch (error) {
+              console.error('Failed to refresh token:', error);
+              keycloak.logout();
+              return Promise.reject(error);
+            }
           }
+          config.headers.Authorization = `Bearer ${keycloak.token}`;
         }
-        config.headers.Authorization = `Bearer ${keycloak.token}`;
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
       }
-      return config;
-    },
-    (error) => {
-      return Promise.reject(error);
-    }
   );
 
   axiosInstance.interceptors.response.use(
-    (response) => response,
-    (error) => {
-      if (error.response?.status === 401) {
-        keycloak.logout();
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          keycloak.logout();
+        }
+        return Promise.reject(error);
       }
-      return Promise.reject(error);
-    }
   );
 };
 
 addAuthInterceptor(patientApi);
 addAuthInterceptor(messageApi);
+addAuthInterceptor(searchApi);
+addAuthInterceptor(imageApi);
 
 export default patientApi;

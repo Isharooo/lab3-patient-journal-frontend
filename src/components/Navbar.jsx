@@ -10,20 +10,26 @@ function Navbar() {
   }
 
   return (
-    <nav className="navbar">
-      <div className="navbar-brand">Patient Journal</div>
-      <div className="navbar-menu">
-        <Link to="/dashboard">Dashboard</Link>
-        {!isPatient && <Link to="/patients">Patients</Link>}
-        <Link to="/messages">Messages</Link>
-        <span className="navbar-user">
+      <nav className="navbar">
+        <div className="navbar-brand">Patient Journal</div>
+        <div className="navbar-menu">
+          <Link to="/dashboard">Dashboard</Link>
+          {!isPatient && (
+              <>
+                <Link to="/patients">Patienter</Link>
+                <Link to="/patients/search">Sök</Link>
+                <Link to="/patients/create">Ny Patient</Link>
+              </>
+          )}
+          <Link to="/messages">Meddelanden</Link>
+          <span className="navbar-user">
           {user?.firstName} {user?.lastName} ({user?.role})
         </span>
-        <button onClick={logout} className="logout-btn">
-          Logout
-        </button>
-      </div>
-    </nav>
+          <button onClick={logout} className="logout-btn">
+            Logga ut
+          </button>
+        </div>
+      </nav>
   );
 }
 

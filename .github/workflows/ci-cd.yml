@@ -2,13 +2,12 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [master]
+    branches: [master, main]
   pull_request:
-    branches: [master]
+    branches: [master, main]
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  REGISTRY: registry.cloud.cbh.kth.se
 
 jobs:
   test:
@@ -33,7 +32,7 @@ jobs:
   build-and-push:
     needs: test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
     permissions:
       contents: read
       packages: write
@@ -42,32 +41,30 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Log in to Container Registry
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to kthcloud Registry
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=sha,prefix=
-            type=raw,value=latest
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ secrets.DOCKER_TAG }}
+          platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: |
             VITE_KEYCLOAK_URL=${{ secrets.VITE_KEYCLOAK_URL }}
             VITE_KEYCLOAK_REALM=${{ secrets.VITE_KEYCLOAK_REALM }}
             VITE_KEYCLOAK_CLIENT_ID=${{ secrets.VITE_KEYCLOAK_CLIENT_ID }}
             VITE_PATIENT_API_URL=${{ secrets.VITE_PATIENT_API_URL }}
             VITE_MESSAGE_API_URL=${{ secrets.VITE_MESSAGE_API_URL }}
+            VITE_SEARCH_API_URL=${{ secrets.VITE_SEARCH_API_URL }}
+            VITE_IMAGE_API_URL=${{ secrets.VITE_IMAGE_API_URL }}
