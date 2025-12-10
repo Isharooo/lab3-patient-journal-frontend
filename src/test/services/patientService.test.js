@@ -7,6 +7,7 @@ vi.mock('../../services/api', () => ({
     get: vi.fn(),
     post: vi.fn(),
     put: vi.fn(),
+    delete: vi.fn(),
   },
 }));
 
@@ -54,29 +55,82 @@ describe('patientService', () => {
     });
   });
 
-  describe('createPatient', () => {
-    it('creates a new patient', async () => {
+  // === KAFKA ENDPOINTS (för högre betyg) ===
+  describe('createPatient (Kafka)', () => {
+    it('sends CREATE command to Kafka endpoint', async () => {
+      const newPatient = { firstName: 'John', lastName: 'Doe' };
+      const response = { message: 'CREATE-kommando skickat till Kafka' };
+      patientApi.post.mockResolvedValue({ data: response });
+
+      const result = await patientService.createPatient(newPatient);
+
+      // Använder /kafka/patients för asynkron Kafka-hantering
+      expect(patientApi.post).toHaveBeenCalledWith('/kafka/patients', newPatient);
+      expect(result).toEqual(response);
+    });
+  });
+
+  describe('updatePatient (Kafka)', () => {
+    it('sends UPDATE command to Kafka endpoint', async () => {
+      const updatedData = { firstName: 'John', lastName: 'Updated' };
+      const response = { message: 'UPDATE-kommando skickat till Kafka' };
+      patientApi.put.mockResolvedValue({ data: response });
+
+      const result = await patientService.updatePatient(1, updatedData);
+
+      // Använder /kafka/patients/{id} för asynkron Kafka-hantering
+      expect(patientApi.put).toHaveBeenCalledWith('/kafka/patients/1', updatedData);
+      expect(result).toEqual(response);
+    });
+  });
+
+  describe('deletePatient (Kafka)', () => {
+    it('sends DELETE command to Kafka endpoint', async () => {
+      const response = { message: 'DELETE-kommando skickat till Kafka' };
+      patientApi.delete.mockResolvedValue({ data: response });
+
+      const result = await patientService.deletePatient(1);
+
+      // Använder /kafka/patients/{id} för asynkron Kafka-hantering
+      expect(patientApi.delete).toHaveBeenCalledWith('/kafka/patients/1');
+      expect(result).toEqual(response);
+    });
+  });
+
+  // === DIRECT REST ENDPOINTS (synkrona alternativ) ===
+  describe('createPatientDirect', () => {
+    it('creates a patient via direct REST', async () => {
       const newPatient = { firstName: 'John', lastName: 'Doe' };
       const createdPatient = { id: 1, ...newPatient };
       patientApi.post.mockResolvedValue({ data: createdPatient });
 
-      const result = await patientService.createPatient(newPatient);
+      const result = await patientService.createPatientDirect(newPatient);
 
       expect(patientApi.post).toHaveBeenCalledWith('/patients', newPatient);
       expect(result).toEqual(createdPatient);
     });
   });
 
-  describe('updatePatient', () => {
-    it('updates an existing patient', async () => {
+  describe('updatePatientDirect', () => {
+    it('updates a patient via direct REST', async () => {
       const updatedData = { firstName: 'John', lastName: 'Updated' };
       const updatedPatient = { id: 1, ...updatedData };
       patientApi.put.mockResolvedValue({ data: updatedPatient });
 
-      const result = await patientService.updatePatient(1, updatedData);
+      const result = await patientService.updatePatientDirect(1, updatedData);
 
       expect(patientApi.put).toHaveBeenCalledWith('/patients/1', updatedData);
       expect(result).toEqual(updatedPatient);
+    });
+  });
+
+  describe('deletePatientDirect', () => {
+    it('deletes a patient via direct REST', async () => {
+      patientApi.delete.mockResolvedValue({ data: undefined });
+
+      await patientService.deletePatientDirect(1);
+
+      expect(patientApi.delete).toHaveBeenCalledWith('/patients/1');
     });
   });
 });
