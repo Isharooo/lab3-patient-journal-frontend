@@ -1,11 +1,9 @@
 import { createContext, useState, useContext, useEffect, useCallback } from 'react';
-import keycloak, { initKeycloak } from '../keycloak';
+import keycloak from '../keycloak';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [initialized, setInitialized] = useState(false);
-  const [authenticated, setAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
 
@@ -22,27 +20,19 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    initKeycloak()
-        .then((auth) => {
-          setAuthenticated(auth);
-          if (auth) {
-            setToken(keycloak.token);
-            const tokenParsed = keycloak.tokenParsed;
-            setUser({
-              id: tokenParsed.sub,
-              username: tokenParsed.preferred_username,
-              firstName: tokenParsed.given_name || '',
-              lastName: tokenParsed.family_name || '',
-              email: tokenParsed.email || '',
-              role: extractRole(tokenParsed),
-            });
-          }
-          setInitialized(true);
-        })
-        .catch((err) => {
-          console.error('Keycloak init failed:', err);
-          setInitialized(true);
-        });
+    // Keycloak är redan initierad i main.jsx
+    if (keycloak.authenticated) {
+      setToken(keycloak.token);
+      const tokenParsed = keycloak.tokenParsed;
+      setUser({
+        id: tokenParsed.sub,
+        username: tokenParsed.preferred_username,
+        firstName: tokenParsed.given_name || '',
+        lastName: tokenParsed.family_name || '',
+        email: tokenParsed.email || '',
+        role: extractRole(tokenParsed),
+      });
+    }
 
     keycloak.onTokenExpired = () => {
       keycloak
@@ -57,7 +47,7 @@ export const AuthProvider = ({ children }) => {
             logout();
           });
     };
-  }, []);
+  }, [logout]);
 
   const getToken = useCallback(async () => {
     if (keycloak.isTokenExpired(5)) {
@@ -74,8 +64,8 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     token,
-    authenticated,
-    initialized,
+    authenticated: keycloak.authenticated,
+    initialized: true,
     logout,
     getToken,
     keycloak,
@@ -83,10 +73,6 @@ export const AuthProvider = ({ children }) => {
     isPatient: user?.role === 'PATIENT',
     isStaff: user?.role === 'STAFF',
   };
-
-  if (!initialized) {
-    return <div>Loading...</div>;
-  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
