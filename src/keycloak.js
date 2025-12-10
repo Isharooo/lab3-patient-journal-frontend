@@ -6,13 +6,15 @@ const keycloakConfig = {
     clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID || 'frontend-client',
 };
 
-// Logga vid uppstart
-console.log('=== KEYCLOAK INIT START ===');
+// Logga direkt vid module load
+console.log('=== KEYCLOAK MODULE LOADED ===');
 console.log('Timestamp:', new Date().toISOString());
 console.log('Config:', JSON.stringify(keycloakConfig, null, 2));
 console.log('Current URL:', window.location.href);
-console.log('Has code param:', new URLSearchParams(window.location.search).has('code'));
-console.log('Has state param:', new URLSearchParams(window.location.search).has('state'));
+console.log('URL Search params:', window.location.search);
+console.log('Has code:', new URLSearchParams(window.location.search).has('code'));
+console.log('Has state:', new URLSearchParams(window.location.search).has('state'));
+console.log('Has session_state:', new URLSearchParams(window.location.search).has('session_state'));
 
 const keycloak = new Keycloak(keycloakConfig);
 
@@ -23,52 +25,65 @@ export const initKeycloak = () => {
     console.log('=== initKeycloak() CALLED ===');
     console.log('isInitialized:', isInitialized);
     console.log('initPromise exists:', !!initPromise);
+    console.log('keycloak.authenticated:', keycloak.authenticated);
 
-    if (isInitialized && keycloak.authenticated) {
-        console.log('Already initialized and authenticated, returning true');
-        return Promise.resolve(true);
+    if (isInitialized) {
+        console.log('Already initialized, returning:', keycloak.authenticated);
+        return Promise.resolve(keycloak.authenticated);
     }
 
     if (initPromise) {
-        console.log('Returning existing promise');
+        console.log('Returning existing initPromise');
         return initPromise;
     }
 
     isInitialized = true;
-    console.log('Starting keycloak.init()...');
+    console.log('=== STARTING keycloak.init() ===');
 
-    initPromise = keycloak
-        .init({
-            onLoad: 'login-required',
-            checkLoginIframe: false,
-            pkceMethod: 'S256',
-        })
-        .then((authenticated) => {
-            console.log('=== KEYCLOAK INIT SUCCESS ===');
-            console.log('Authenticated:', authenticated);
-            console.log('Token exists:', !!keycloak.token);
-            console.log('Token parsed:', keycloak.tokenParsed ? JSON.stringify(keycloak.tokenParsed, null, 2) : 'null');
+    initPromise = new Promise((resolve, reject) => {
+        keycloak
+            .init({
+                onLoad: 'login-required',
+                checkLoginIframe: false,
+                pkceMethod: 'S256',
+                enableLogging: true,
+            })
+            .then((authenticated) => {
+                console.log('=== KEYCLOAK INIT SUCCESS ===');
+                console.log('Authenticated:', authenticated);
+                console.log('Token exists:', !!keycloak.token);
+                console.log('Token:', keycloak.token ? keycloak.token.substring(0, 50) + '...' : 'null');
+                console.log('Refresh token exists:', !!keycloak.refreshToken);
+                console.log('Subject:', keycloak.subject);
+                console.log('Token parsed:', JSON.stringify(keycloak.tokenParsed, null, 2));
 
-            if (window.location.search) {
-                console.log('Clearing URL params...');
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
+                // Rensa URL
+                if (window.location.search) {
+                    console.log('Clearing URL search params');
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
 
-            return authenticated;
-        })
-        .catch((err) => {
-            console.log('=== KEYCLOAK INIT FAILED ===');
-            console.log('Error:', err);
-            console.log('Error type:', typeof err);
-            console.log('Error stringified:', JSON.stringify(err));
-            console.log('Keycloak state after error:', {
-                authenticated: keycloak.authenticated,
-                token: !!keycloak.token,
-                refreshToken: !!keycloak.refreshToken,
-                subject: keycloak.subject,
+                resolve(authenticated);
+            })
+            .catch((err) => {
+                console.error('=== KEYCLOAK INIT FAILED ===');
+                console.error('Error:', err);
+                console.error('Error type:', typeof err);
+                console.error('Error message:', err?.message);
+                console.error('Error stack:', err?.stack);
+                console.error('Error stringified:', JSON.stringify(err, Object.getOwnPropertyNames(err || {})));
+                console.error('Keycloak state after error:', {
+                    authenticated: keycloak.authenticated,
+                    token: keycloak.token ? 'exists' : 'null',
+                    refreshToken: keycloak.refreshToken ? 'exists' : 'null',
+                    subject: keycloak.subject,
+                    sessionId: keycloak.sessionId,
+                    responseMode: keycloak.responseMode,
+                    flow: keycloak.flow,
+                });
+                reject(err);
             });
-            throw err;
-        });
+    });
 
     return initPromise;
 };
