@@ -1,7 +1,7 @@
 import { patientApi } from './api';
 
 export const patientService = {
-  // === LÄSNING: Via vanligt REST (snabbast för användaren) ===
+  // Via vanligt REST (snabbast för användaren)
   getAllPatients: async () => {
     const response = await patientApi.get('/patients');
     return response.data;
@@ -17,7 +17,6 @@ export const patientService = {
     return response.data;
   },
 
-  // === HÖGRE BETYG: Skrivning via Kafka (Asynkront) ===
   // Dessa anrop skickar kommandon till Kafka topic 'patient.commands'
   // som sedan processas asynkront av PatientCommandConsumer
 
