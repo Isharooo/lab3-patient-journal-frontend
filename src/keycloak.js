@@ -6,62 +6,38 @@ const keycloakConfig = {
     clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID || 'frontend-client',
 };
 
-// Logga vid module load
 console.log('=== KEYCLOAK MODULE LOADED ===');
-console.log('Timestamp:', new Date().toISOString());
 console.log('Config:', JSON.stringify(keycloakConfig, null, 2));
-console.log('Current URL:', window.location.href);
-console.log('URL hash:', window.location.hash);
-console.log('URL search:', window.location.search);
-console.log('SessionStorage keys:', Object.keys(sessionStorage));
+console.log('LocalStorage keys:', Object.keys(localStorage));
 
 const keycloak = new Keycloak(keycloakConfig);
 
 let initPromise = null;
 
 export const initKeycloak = () => {
-    console.log('=== initKeycloak() CALLED ===');
-    console.log('initPromise exists:', !!initPromise);
-    console.log('keycloak.authenticated:', keycloak.authenticated);
-
     if (initPromise) {
-        console.log('Returning existing initPromise');
         return initPromise;
     }
-
-    console.log('=== STARTING keycloak.init() ===');
 
     initPromise = keycloak
         .init({
             onLoad: 'login-required',
             checkLoginIframe: false,
             pkceMethod: 'S256',
+            useNonce: false,  // Stäng av nonce-validering
         })
         .then((authenticated) => {
-            console.log('=== KEYCLOAK INIT SUCCESS ===');
-            console.log('Authenticated:', authenticated);
-            console.log('Token exists:', !!keycloak.token);
-            console.log('Subject:', keycloak.subject);
-            console.log('TokenParsed:', JSON.stringify(keycloak.tokenParsed, null, 2));
+            console.log('SUCCESS - Authenticated:', authenticated);
 
-            // Rensa URL
             if (window.location.hash || window.location.search) {
-                console.log('Clearing URL params');
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
 
             return authenticated;
         })
         .catch((err) => {
-            console.error('=== KEYCLOAK INIT FAILED ===');
-            console.error('Error:', err);
-            console.error('Error type:', typeof err);
-            console.error('SessionStorage at failure:', Object.keys(sessionStorage));
-
-            // Vid nonce-fel, rensa och försök igen
-            console.log('Clearing sessionStorage and redirecting...');
-            sessionStorage.clear();
-            window.location.href = window.location.origin;
+            console.error('FAILED:', err);
+            document.body.innerHTML = '<h1>Keycloak Error</h1><p>Check console</p>';
             throw err;
         });
 
